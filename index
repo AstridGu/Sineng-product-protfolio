@@ -1,1 +1,371 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>上能电气 - 分布式光储产品组合查询</title>
+    <style>
+        :root {
+            --primary-blue: #0b3d91;
+            --hover-blue: #1e88e5;
+            --light-bg: #f4f7f6;
+            --card-bg: #ffffff;
+            --text-main: #333333;
+            --text-light: #666666;
+        }
 
+        body {
+            font-family: 'Microsoft YaHei', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: var(--light-bg);
+            color: var(--text-main);
+        }
+
+        /* 顶部导航 */
+        header {
+            background: linear-gradient(135deg, var(--primary-blue), var(--hover-blue));
+            color: white;
+            padding: 40px 20px;
+            text-align: center;
+        }
+        header h1 { margin: 0 0 10px 0; font-size: 32px; letter-spacing: 2px; }
+        header p { margin: 0; font-size: 16px; opacity: 0.9; }
+
+        /* 主容器 */
+        .container {
+            max-width: 1000px;
+            margin: -20px auto 40px;
+            padding: 0 20px;
+        }
+
+        /* 交互选择区 */
+        .selector-box {
+            background: var(--card-bg);
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.05);
+            margin-bottom: 30px;
+            position: relative;
+            z-index: 10;
+        }
+        .step-title {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 15px;
+            color: var(--primary-blue);
+            display: flex;
+            align-items: center;
+        }
+        .step-title span {
+            background: var(--primary-blue);
+            color: white;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: inline-flex;
+            justify-content: center;
+            align-items: center;
+            margin-right: 10px;
+            font-size: 14px;
+        }
+        .options-group {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 25px;
+            flex-wrap: wrap;
+        }
+        .option-btn {
+            background: #e3f2fd;
+            color: var(--primary-blue);
+            border: 2px solid transparent;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: bold;
+        }
+        .option-btn:hover { background: #bbdefb; }
+        .option-btn.active {
+            background: var(--primary-blue);
+            color: white;
+            border-color: var(--primary-blue);
+            box-shadow: 0 4px 10px rgba(11, 61, 145, 0.3);
+        }
+
+        /* 结果展示区 */
+        .result-section {
+            display: none; /* 初始隐藏 */
+            animation: fadeIn 0.5s ease-in-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .result-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        @media (max-width: 768px) {
+            .result-grid { grid-template-columns: 1fr; }
+        }
+        .product-card {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            border-top: 5px solid var(--hover-blue);
+        }
+        .product-card h3 { color: var(--primary-blue); margin-top: 0; font-size: 20px; }
+        .product-tag {
+            display: inline-block;
+            background: #e8f5e9;
+            color: #2e7d32;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: bold;
+            margin-bottom: 15px;
+        }
+        .spec-list { list-style: none; padding: 0; margin: 0; line-height: 1.8; color: var(--text-light); }
+        .spec-list li::before { content: "✓"; color: var(--hover-blue); font-weight: bold; margin-right: 8px; }
+        
+        .bundle-section {
+            margin-top: 30px;
+            padding: 20px;
+            background: #fffde7;
+            border-radius: 12px;
+            border-left: 5px solid #fbc02d;
+        }
+        .bundle-section h4 { margin: 0 0 10px 0; color: #f57f17; }
+
+        /* 底部 */
+        footer {
+            text-align: center;
+            padding: 20px;
+            background: var(--primary-blue);
+            color: white;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <h1>上能电气 (Sineng) 分布式光储</h1>
+    <p>全场景智能能源解决方案 | 全球Top 4 逆变器供应商</p>
+</header>
+
+<div class="container">
+    <!-- 交互选择区 -->
+    <div class="selector-box">
+        <div class="step-title"><span>1</span> 请选择您的应用场景：</div>
+        <div class="options-group">
+            <button class="option-btn active" onclick="selectScene('residential')">🏡 户用家庭 (Residential)</button>
+            <button class="option-btn" onclick="selectScene('ci')">🏭 工商业园区 (C&I)</button>
+        </div>
+
+        <div id="sub-options" style="display: block;">
+            <div class="step-title" id="sub-title"><span>2</span> 请选择具体需求：</div>
+            <div class="options-group" id="sub-btn-group">
+                <button class="option-btn active" onclick="selectSub('res-1phase')">单相户型 / 别墅</button>
+                <button class="option-btn" onclick="selectSub('res-3phase')">三相大平层 / 别墅</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 结果展示区 -->
+    <div id="result-box" class="result-section" style="display: block;">
+        <!-- 结果内容将由 JS 动态注入 -->
+    </div>
+</div>
+
+<footer>
+    © 2026 上能电气股份有限公司 (Sineng Electric) | 客户自助选型系统演示
+</footer>
+
+<script>
+    // 产品数据库（纯前端数据展示）
+    const productData = {
+        'res-1phase': {
+            title: "户用单相光储组合",
+            inverter: {
+                name: "SN3.0/3.68/4.0/5.0/6.0HS 单相混合逆变器",
+                tag: "静音安全 · 家庭首选",
+                specs: [
+                    "1.5倍 PV 超负载输入，存储更多电量",
+                    "内置 AFCI 与浪涌保护，安全第一",
+                    "集成压铸机身，轻巧紧凑",
+                    "兼容第三方电池，即插即用"
+                ]
+            },
+            battery: {
+                name: "EM-6.4KWH-HA 系列堆叠电池 (6.4~25.7kWh)",
+                tag: "灵活扩容 · 车规级电芯",
+                specs: [
+                    "340Ah 车规级电芯，安全超越标准",
+                    "8000次循环寿命，持久耐用",
+                    "支持新旧电池混合使用，灵活扩容",
+                    "IP66 户外防护等级，无惧恶劣环境",
+                    "230mm 超薄设计，节省家庭空间"
+                ]
+            },
+            monitor: "Enjoy Solar APP / Web 平台 + Si-Dongle 即插即用采集器"
+        },
+        'res-3phase': {
+            title: "户用三相光储组合",
+            inverter: {
+                name: "SN5.0/6.0/8.0/10/12/15HT 三相混合逆变器",
+                tag: "强劲动力 · 智能管理",
+                specs: [
+                    "110% 三相不平衡输出，带动大功率电器",
+                    "自动三相电表设置，通电即用",
+                    "支持交流耦合技术，扩展无限可能",
+                    "高电池效率，不浪费每一度电"
+                ]
+            },
+            battery: {
+                name: "EB-6.4KWH-HB 系列堆叠电池 (6.4~25.7kWh)",
+                tag: "独立控制 · 灵活扩展",
+                specs: [
+                    "独立电池控制，无木桶效应短板",
+                    "340Ah 车规级电芯，阻燃级保护",
+                    "支持新旧电池混合使用",
+                    "IP65 防护等级，室内外均可安装"
+                ]
+            },
+            monitor: "Enjoy Solar APP / Web 平台 + Si-Logger 数据采集器"
+        },
+        'ci-1': {
+            title: "中小型工商业屋顶方案",
+            inverter: {
+                name: "SN3.0~60PT 三相组串逆变器",
+                tag: "高效稳定 · 中小型首选",
+                specs: [
+                    "最大效率达 98.6%，1.1倍持续过载输出",
+                    "IP66 防护与 C5 防腐等级",
+                    "支持双面组件，精准组串电流检测",
+                    "智能风扇散热，支持本地与远程维护"
+                ]
+            },
+            battery: {
+                name: "不强制配储 / 可选配工商业储能柜",
+                tag: "按需配置",
+                specs: [
+                    "适合纯光伏并网项目",
+                    "如需配储，上能提供 PCS 变流器及 BESS 系统",
+                    "支持虚拟电网构网技术 (Grid-forming)"
+                ]
+            },
+            monitor: "Enjoy Solar 平台 + Si-Box 数据采集器 (支持32台设备)"
+        },
+        'ci-2': {
+            title: "大型工商业/园区方案",
+            inverter: {
+                name: "SP-350K-H1/HB1 组串逆变器",
+                tag: "旗舰机型 · 极致效能",
+                specs: [
+                    "最大效率高达 99.0%，DC/AC 比可达 1.8",
+                    "集成碳化硅 (SiC) 器件，轻量高效",
+                    "支持智能 IV 曲线扫描，快速定位故障",
+                    "支持 PLC / RS485 通讯，无熔丝设计"
+                ]
+            },
+            battery: {
+                name: "不强制配储 / 可选配大储 BESS 系统",
+                tag: "按需配置",
+                specs: [
+                    "配合上能集中式 PCS 解决方案",
+                    "支持下一代构网型 (Grid-forming) 技术",
+                    "提升电网稳定性与可靠性"
+                ]
+            },
+            monitor: "Enjoy Solar 平台 + Si-Box 数据采集器 / 本地 SCADA 系统"
+        }
+    };
+
+    // 状态变量
+    let currentScene = 'residential';
+    let currentSub = 'res-1phase';
+
+    // 切换主场景
+    function selectScene(scene) {
+        currentScene = scene;
+        document.querySelectorAll('.options-group')[0].querySelectorAll('.option-btn').forEach(btn => btn.classList.remove('active'));
+        event.target.classList.add('active');
+
+        const subBtnGroup = document.getElementById('sub-btn-group');
+        if (scene === 'residential') {
+            document.getElementById('sub-title').innerHTML = '<span>2</span> 请选择具体需求：';
+            subBtnGroup.innerHTML = `
+                <button class="option-btn active" onclick="selectSub('res-1phase')">单相户型 / 别墅</button>
+                <button class="option-btn" onclick="selectSub('res-3phase')">三相大平层 / 别墅</button>
+            `;
+            selectSub('res-1phase');
+        } else {
+            document.getElementById('sub-title').innerHTML = '<span>2</span> 请选择屋顶规模：';
+            subBtnGroup.innerHTML = `
+                <button class="option-btn active" onclick="selectSub('ci-1')">中小型厂房 (50~100kW)</button>
+                <button class="option-btn" onclick="selectSub('ci-2')">大型园区 (100kW+)</button>
+            `;
+            selectSub('ci-1');
+        }
+    }
+
+    // 切换子选项并渲染结果
+    function selectSub(subKey) {
+        currentSub = subKey;
+        document.querySelectorAll('#sub-btn-group .option-btn').forEach(btn => btn.classList.remove('active'));
+        event.target.classList.add('active');
+
+        renderResult(subKey);
+    }
+
+    // 渲染结果
+    function renderResult(key) {
+        const data = productData[key];
+        const resultBox = document.getElementById('result-box');
+        
+        let html = `
+            <h2 style="text-align: center; color: var(--primary-blue); margin-bottom: 25px;">为您推荐的配置方案：${data.title}</h2>
+            <div class="result-grid">
+                <!-- 逆变器卡片 -->
+                <div class="product-card">
+                    <div class="product-tag">${data.inverter.tag}</div>
+                    <h3>🔌 ${data.inverter.name}</h3>
+                    <ul class="spec-list">
+                        ${data.inverter.specs.map(spec => `<li>${spec}</li>`).join('')}
+                    </ul>
+                </div>
+                
+                <!-- 电池卡片 -->
+                <div class="product-card" style="border-top-color: #2e7d32;">
+                    <div class="product-tag" style="background: #e3f2fd; color: #0b3d91;">${data.battery.tag}</div>
+                    <h3>🔋 ${data.battery.name}</h3>
+                    <ul class="spec-list">
+                        ${data.battery.specs.map(spec => `<li>${spec}</li>`).join('')}
+                    </ul>
+                </div>
+            </div>
+
+            <!-- 监控与通讯 -->
+            <div class="bundle-section">
+                <h4>📡 智能监控与通讯搭配：</h4>
+                <p style="margin: 0; color: #555;">${data.monitor}</p>
+            </div>
+        `;
+        
+        resultBox.innerHTML = html;
+        resultBox.style.display = 'block';
+    }
+
+    // 初始化加载
+    window.onload = function() {
+        renderResult('res-1phase');
+    };
+</script>
+
+</body>
+</html>
